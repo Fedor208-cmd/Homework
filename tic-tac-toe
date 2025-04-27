@@ -1,0 +1,65 @@
+import tkinter
+
+master = tkinter.Tk()
+canvas = tkinter.Canvas(master, bg="white", width=600, height=600)
+
+cross = set()
+zero = set()
+curr = "x"
+
+
+def choose(event):
+    xo = event.x
+    yo = event.y
+    for square in squares:
+        xw1, yw1, xw2, yw2 = canvas.coords(square)
+        if xw1 < xo < xw2 and yw1 < yo < yw2 and square not in cross and square not in zero:
+            if curr == "x":
+                x1 = canvas.coords(square)[0]
+                y1 = canvas.coords(square)[1]
+                x2 = canvas.coords(square)[2]
+                y2 = canvas.coords(square)[3]
+                canvas.create_line((x1, y1), (x2, y2))
+                canvas.create_line((x2, y1), (x1, y2))
+                cross.add(squares[squares.index(square)])
+                curr = "o"
+            elif curr == "o":
+                x1 = canvas.coords(square)[0]
+                y1 = canvas.coords(square)[1]
+                x2 = canvas.coords(square)[2]
+                y2 = canvas.coords(square)[3]
+                canvas.create_oval((x1, y1), (x2, y2))
+                zero.add(squares[squares.index(square)])
+                curr = "x"
+    if cross in win or zero in win:
+        ind = win.index(cross)
+        res = win[ind]
+        for elem in res:
+            canvas.itemconfig(elem, fill="green")
+
+
+one = canvas.create_rectangle((0, 0), (200, 200), fill="white", outline="black")
+two = canvas.create_rectangle((200, 0), (400, 200), fill="white", outline="black")
+three = canvas.create_rectangle((400, 0), (600, 200), fill="white", outline="black")
+four = canvas.create_rectangle((0, 200), (200, 400), fill="white", outline="black")
+five = canvas.create_rectangle((200, 200), (400, 400), fill="white", outline="black")
+six = canvas.create_rectangle((400, 200), (600, 400), fill="white", outline="black")
+seven = canvas.create_rectangle((0, 400), (200, 600), fill="white", outline="black")
+eight = canvas.create_rectangle((200, 400), (400, 600), fill="white", outline="black")
+nine = canvas.create_rectangle((400, 400), (600, 600), fill="white", outline="black")
+
+win = [{one, two, three},
+       {four, five, six},
+       {seven, eight, nine},
+       {one, four, seven},
+       {two, five, eight},
+       {three, six, nine},
+       {one, five, nine},
+       {three, five, seven}]
+
+squares = [one, two, three, four, five, six, seven, eight, nine]
+
+master.bind("<ButtonPress>", choose)
+
+canvas.pack()
+master.mainloop()
