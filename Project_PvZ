@@ -1,0 +1,36 @@
+import tkinter
+import time
+import random
+
+
+master = tkinter.Tk()
+canvas = tkinter.Canvas(master, bg="light blue", width=1000, height=600)
+
+suns = 0
+
+
+def sunflower(xs, ys):
+    canvas.create_oval((xs, ys), (xs + 100, ys + 120), outline="orange", fill="yellow")
+    canvas.create_oval((xs - 10, ys - 10), (xs + 90, ys + 110), outline="#542626", fill="#6E3131")
+    time.sleep(10)
+    suns += 10
+
+
+field = list()
+colour = "green"
+for y in range(0, 600, 120):
+    if colour == "green":
+        colour = "dark green"
+    elif colour == "dark green":
+        colour = "green"
+    for x in range(200, 1000, 100):
+        if colour == "green":
+            square = canvas.create_rectangle((x, y), (x + 100, y + 120), fill=colour)
+            colour = "dark green"
+        else:
+            square = canvas.create_rectangle((x, y), (x + 100, y + 120), fill=colour)
+            colour = "green"
+        field.append(square)
+
+canvas.pack()
+master.mainloop()
