@@ -158,7 +158,7 @@ def stage(event):
             used.append(pot)
             canvas.update()
             plant = None
-            suns -= 500
+            suns -= 1000
             amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
             amount.pack()
             break
