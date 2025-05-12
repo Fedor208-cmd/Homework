@@ -93,7 +93,7 @@ def boss_spawn(x_l):
                         canvas.delete(elem)
                     if targ in potatoes:
                         zombies[enemy] -= 10
-                        if zombies[enemy] == 0:
+                        if zombies[enemy] <= 0:
                             canvas.delete(enemy)
                             del zombies[enemy]
                             score += 1
