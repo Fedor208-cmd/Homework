@@ -77,8 +77,10 @@ def zombie_spawn(x_l, y_l):
     global score
     global nuts
     global loss
+    global used
+
     zombie_mob = canvas.create_oval((x_l, y_l), (x_l + w // 10, y_l + w // 10), fill="#808000", outline="#556B2F")
-    health = 5
+    health = 10
     zombies[zombie_mob] = health
     while canvas.coords(zombie_mob)[0] > 0:
         time.sleep(0.09)
@@ -88,6 +90,16 @@ def zombie_spawn(x_l, y_l):
             for enemy in zombies.keys():
                 if collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy) and targ not in nuts:
                     plants.remove(targ)
+                    for place in used:
+                        removed = False
+                        for i in range(4):
+                            if canvas.coords(place)[i] == canvas.coords(targ)[i]:
+                                used.remove(place)
+                                removed = True
+                                break
+                        if removed:
+                            break
+
                     for elem in targ:
                         canvas.delete(elem)
                     if targ in potatoes:
