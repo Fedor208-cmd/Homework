@@ -142,7 +142,7 @@ def stage(event):
     if collision(event, button_nut):
         plant = "Nut"
     for pot in field:
-        if collision(event, pot) and plant == "Sunflower" and pot not in used and suns >= 500:
+        if collision(event, pot) and plant == "Sunflower" and pot not in used.values() and suns >= 500:
             a = sunflower_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
             sunflowers.append(a)
             plants.append(a)
@@ -151,7 +151,7 @@ def stage(event):
             plant = None
             suns -= 500
             break
-        if collision(event, pot) and plant == "Peashooter" and pot not in used and suns >= 1000:
+        if collision(event, pot) and plant == "Peashooter" and pot not in used.values() and suns >= 1000:
             a = peashooter_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
             peashooters.append(a)
             plants.append(a)
@@ -162,7 +162,7 @@ def stage(event):
             amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
             amount.pack()
             break
-        if collision(event, pot) and plant == "Potato" and pot not in used and suns >= 1000:
+        if collision(event, pot) and plant == "Potato" and pot not in used.values() and suns >= 1000:
             a = potato_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
             potatoes.append(a)
             plants.append(a)
@@ -173,7 +173,7 @@ def stage(event):
             amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
             amount.pack()
             break
-        if collision(event, pot) and plant == "Nut" and pot not in used and suns >= 250:
+        if collision(event, pot) and plant == "Nut" and pot not in used.values() and suns >= 250:
             a = nut_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
             nuts[a[0]] = 5
             plants.append(a)
