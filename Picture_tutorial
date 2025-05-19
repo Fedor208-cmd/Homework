@@ -1,0 +1,53 @@
+import tkinter
+
+w = 1000
+h = 600
+shift_x = w // 10
+shift_y = h // 5
+
+def collision(event, button):
+    xo1, yo1 = event.x, event.y
+    xb1, xb2, yb1, yb2 = canvas.coords(button)[0], canvas.coords(button)[2], canvas.coords(button)[1], \
+    canvas.coords(button)[3]
+    if (xb1 < xo1 < xb2) and (yb1 < yo1 < yb2):
+        return True
+    return False
+
+master = tkinter.Tk()
+canvas = tkinter.Canvas(master, bg="light blue", width=w, height=h)
+click = True
+wind_help = canvas.create_rectangle((shift_x + w // 100, shift_y - h // 100), (w - shift_x - w // 100, h - shift_y + h // 100), fill="#D2B48C", outline="#8B4513")
+button_play = canvas.create_rectangle((2 * w // 5, 9 * h // 12), (3 * w // 5, 8.5 * h // 12), fill="white")
+txt_play = canvas.create_text((2.5 * w // 5, 8.75 * h // 12), font=("Masquerade", w // 105), text="Играть")
+txt = ["Как играть", "1. Справа на лево идут зомби. Если они дойдут до конца экрана - ты проиграл!",
+"2. Ты можешь обороняться. Для этого нажми по кнопке с растением слева и после нажми по клетке на поле,", "на которую хочешь поставить растение.",
+"2.1 Растения не бесплатные. Чтобы купить растение, необходимо чтобы тебе хватало солнц.", "Кол-во твоих солнц показано сверху экрана, цена растения - на кнопке с ним.",
+"3. Принципы работы растений (сверху вниз):", "Подсолнух - даёт солнца по клику по нему. Чем больше подсолнухов, тем больше солнц за клик.",
+       "Горохострел - по нажатию выпускает горошину, наносящую урон зомби.",
+       'Картофельная мина - при касании с зомби наносит ему огромный урон, но жертвует собой.',
+       "Стена-орех - пушечное мясо.", "4. Для победы необходимо убить определённое количество (см сверху) зомби, они появляются через каждые несколько растений.",
+       "Удачи!"]
+txt_print = list()
+txt_print.append(txt_play)
+y_txt = shift_y - 0.005 * h // 100
+for phrase in txt:
+    ph = canvas.create_text(shift_x + w / 2.5, y_txt, font=("Masquerade", w // 105), text=phrase)
+    y_txt += 2 * h // 50
+    txt_print.append(ph)
+def tutorial(event):
+    global button_play
+    global txt_print
+    global wind_help
+    global click
+    if click:
+        if collision(event, button_play):
+            canvas.delete(button_play)
+            for elem in txt_print:
+                canvas.delete(elem)
+            canvas.delete(wind_help)
+            click = False
+
+
+master.bind("<ButtonPress>", tutorial)
+canvas.pack()
+master.mainloop()
