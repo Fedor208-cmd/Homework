@@ -15,7 +15,7 @@ score = 0
 sunflowers = list()
 peashooters = list()
 potatoes = list()
-used = list()
+used = dict()
 zombies = dict()
 plants = list()
 nuts = dict()
@@ -67,7 +67,8 @@ def potato_draw(xpt, ypt):
 
 def nut_draw(xn, yn):
     wall = canvas.create_oval((xn, yn), (xn + w // 10, yn + h // 5), fill="#CDAB66", outline="#957E4F")
-    return wall
+    crack = canvas.create_line((xn + w // 20, yn), (xn + w // 20, yn + h // 5), fill="#957E4F")
+    return [wall, crack]
 
 
 def zombie_spawn(x_l, y_l):
@@ -77,45 +78,41 @@ def zombie_spawn(x_l, y_l):
     global score
     global nuts
     global loss
-    global used
-
     zombie_mob = canvas.create_oval((x_l, y_l), (x_l + w // 10, y_l + w // 10), fill="#808000", outline="#556B2F")
-    health = 10
+    health = 5
     zombies[zombie_mob] = health
     while canvas.coords(zombie_mob)[0] > 0:
         time.sleep(0.09)
-        canvas.move(zombie_mob, -10, 0)
+        canvas.move(zombie_mob, -1.5, 0)
         canvas.update()
         for targ in plants:
             for enemy in zombies.keys():
-                if collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy) and targ not in nuts:
+                if (collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy)) and not (targ[0] in nuts):
+                    print(targ[0] in nuts)
                     plants.remove(targ)
-                    for place in used:
-                        removed = False
-                        for i in range(4):
-                            if canvas.coords(place)[i] == canvas.coords(targ)[i]:
-                                used.remove(place)
-                                removed = True
-                                break
-                        if removed:
-                            break
-
+                    del used[targ[0]]
                     for elem in targ:
                         canvas.delete(elem)
                     if targ in potatoes:
-                        canvas.delete(enemy)
-                        score += 1
-                        amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
-                        amount.pack()
-                        del zombies[enemy]
+                        zombies[enemy] -= 10
+                        if zombies[enemy] <= 0:
+                            canvas.delete(enemy)
+                            del zombies[enemy]
+                            score += 1
                         break
-                elif collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy) and targ in nuts:
-                    nuts[targ] -= 1
-                    canvas.move(enemy, 20, 0)
-                    time.sleep(0.001)
-                    if nuts[targ] == 0:
-                        canvas.delete(targ)
-                        del nuts[targ]
+                elif collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy) and targ[0] in nuts:
+                    while nuts[targ[0]] > 0:
+                        nuts[targ[0]] -= 1
+                        canvas.move(enemy, 20, 0)
+                        time.sleep(0.001)
+                        while not collision_objects(targ[0], enemy):
+                            time.sleep(0.09)
+                            canvas.move(enemy, -1.5, 0)
+                            canvas.update()
+                    canvas.delete(targ[0])
+                    canvas.delete(targ[1])
+                    plants.remove(targ)
+                    del nuts[targ[0]]
     if canvas.coords(zombie_mob)[0] == 0:
         loss = True
 
@@ -147,7 +144,7 @@ def stage(event):
             a = sunflower_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
             sunflowers.append(a)
             plants.append(a)
-            used.append(pot)
+            used[a[0]] = pot
             canvas.update()
             plant = None
             suns -= 500
@@ -156,7 +153,7 @@ def stage(event):
             a = peashooter_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
             peashooters.append(a)
             plants.append(a)
-            used.append(pot)
+            used[a[0]] = pot
             canvas.update()
             plant = None
             suns -= 1000
@@ -167,7 +164,7 @@ def stage(event):
             a = potato_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
             potatoes.append(a)
             plants.append(a)
-            used.append(pot)
+            used[a[0]] = pot
             canvas.update()
             plant = None
             suns -= 1000
@@ -176,9 +173,9 @@ def stage(event):
             break
         if collision(event, pot) and plant == "Nut" and pot not in used and suns >= 250:
             a = nut_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
-            nuts[a] = 5
+            nuts[a[0]] = 5
             plants.append(a)
-            used.append(pot)
+            used[a[0]] = pot
             canvas.update()
             plant = None
             suns -= 250
