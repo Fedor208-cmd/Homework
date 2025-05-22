@@ -22,7 +22,7 @@ plants = list()
 nuts = dict()
 plant = None
 r = 3
-n = 10
+n = 5
 loss = False
 
 
