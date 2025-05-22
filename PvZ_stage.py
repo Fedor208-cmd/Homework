@@ -187,24 +187,24 @@ def stage(event):
             suns += 100 * len(sunflowers)
             amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
             amount.pack()
-    for p_sh in peashooters:
-        if collision(event, p_sh[0]):
-            got = False
+        for p_sh in peashooters:
+        if collision(event, p_sh[0]) and len(peas) < 1:
             xb = canvas.coords(p_sh[1])[2]
             yb1 = canvas.coords(p_sh[1])[1]
             yb2 = canvas.coords(p_sh[1])[3]
             pea = canvas.create_oval((xb, yb1), (xb + (yb2 - yb1), yb2), fill="#00FF7F", outline="#3CB371")
+            peas.append(pea)
+            got = False
             while canvas.coords(pea)[2] > 0:
+
                 time.sleep(0.05)
                 canvas.move(pea, 10, 0)
                 canvas.update()
                 for target in zombies:
                     if collision_objects(pea, target):
                         zombies[target] -= 1
-                        y_rand = (random.randint(0, 4)) * h // 5 + h // 60
-
-                        canvas.moveto(target, canvas.coords(target)[0], y_rand)
                         canvas.delete(pea)
+                        peas.remove(pea)
                         got = True
                     if zombies[target] == 0:
                         canvas.delete(target)
