@@ -1,0 +1,622 @@
+import tkinter
+import time
+import random
+
+w = 1000
+h = 600
+shift_x = w // 5
+shift_y = h // 5
+
+master = tkinter.Tk()
+canvas = tkinter.Canvas(master, bg="light blue", width=w, height=h)
+
+button_tutorial = canvas.create_rectangle((2, h // 2), (w // 3 - w // 20, 2 * h // 3),
+                                          fill="#D2B48C", outline="#8B4513")
+tut_txt = canvas.create_text(canvas.coords(button_tutorial)[2] // 2,
+                             h // 1.7,
+                             font=("Masquerade", 40), text="Обучение")
+button_stage = canvas.create_rectangle((w // 3, h // 2), (2 * w // 3, 2 * h // 3), fill="#D2B48C", outline="#8B4513")
+st_txt = canvas.create_text(w // 2,
+                            h // 1.7,
+                            font=("Masquerade", 40), text="Уровень")
+
+button_boss = canvas.create_rectangle((w // 20 + 2 * w // 3, h // 2), (w, 2 * h // 3),
+                                      fill="#D2B48C", outline="#8B4513")
+b_txt = canvas.create_text(2.55 * w // 3,
+                           h // 1.7,
+                           font=("Masquerade", 40), text="Босс")
+
+
+def collision(event, button):
+    xo1, yo1 = event.x, event.y
+    xb1, xb2, yb1, yb2 = (canvas.coords(button)[0], canvas.coords(button)[2], canvas.coords(button)[1],
+                          canvas.coords(button)[3])
+    if (xb1 < xo1 < xb2) and (yb1 < yo1 < yb2):
+        return True
+    return False
+
+
+def collision_objects(obj1, obj2):
+    xb1, xb2, yb1, yb2 = (canvas.coords(obj1)[0], canvas.coords(obj1)[2], canvas.coords(obj1)[1],
+                          canvas.coords(obj1)[3])
+    xo1, xo2, yo1, yo2 = (canvas.coords(obj2)[0], canvas.coords(obj2)[2], canvas.coords(obj2)[1],
+                          canvas.coords(obj2)[3])
+    if (xo1 <= xb1 <= xo2 or xo1 <= xb2 <= xo2) and (yo1 <= yb1 <= yo2 or yo1 <= yb2 <= yo2) or \
+            (xb1 <= xo1 <= xb2 or xb1 <= xo2 <= xb2) and (yb1 <= yo1 <= yb2 or yb1 <= yo2 <= yb2):
+        return True
+    return False
+
+
+def sunflower_draw(xs, ys):
+    coord = canvas.create_oval((xs, ys), (xs + w // 10, ys + h // 5), outline="orange", fill="yellow")
+    seeds = canvas.create_oval((xs + 20, ys + 20), (xs + w // 10 - 20, ys + h // 5 - 20), outline="#542626",
+                               fill="#6E3131")
+    return [coord, seeds]
+
+
+def peashooter_draw(xp, yp):
+    body = canvas.create_rectangle((xp, yp + h // 15), (xp + w // 10, yp + 2 * h // 15), fill="#ADFF2F",
+                                   outline="#2E8B57")
+    hole = canvas.create_rectangle((xp + w // 15, yp + h // 15 + 5), (xp + w // 10, yp + h // 15 + 35), fill="black")
+    return [body, hole]
+
+
+def potato_draw(xpt, ypt):
+    mine = canvas.create_oval((xpt, ypt), (xpt + w // 10, ypt + h // 5), fill="#FFEE92", outline="#FFD500")
+    led = canvas.create_oval((xpt + 30, ypt + 40), (xpt + w // 10 - 30, ypt + h // 5 - 40), fill="red")
+    return [mine, led]
+
+
+def nut_draw(xn, yn):
+    wall = canvas.create_oval((xn, yn), (xn + w // 10, yn + h // 5), fill="#CDAB66", outline="#957E4F")
+    crack = canvas.create_line((xn + w // 20, yn), (xn + w // 20, yn + h // 5), fill="#957E4F")
+    return [wall, crack]
+
+
+def zombie_spawn(x_l, y_l, zombies, plants, potatoes, score, nuts, loss, used):
+
+    zombie_mob = canvas.create_oval((x_l, y_l), (x_l + w // 10, y_l + w // 10), fill="#808000", outline="#556B2F")
+    health = 5
+    zombies[zombie_mob] = health
+    while canvas.coords(zombie_mob)[0] > 0:
+        time.sleep(0.09)
+        canvas.move(zombie_mob, -2.5, 0)
+        canvas.update()
+        for targ in plants:
+            for enemy in zombies.keys():
+                if (collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy)) and not (targ[0] in nuts):
+                    print(targ[0] in nuts)
+                    plants.remove(targ)
+                    del used[targ[0]]
+                    for elem in targ:
+                        canvas.delete(elem)
+                    if targ in potatoes:
+                        zombies[enemy] -= 10
+                        if zombies[enemy] <= 0:
+                            canvas.delete(enemy)
+                            del zombies[enemy]
+                            score += 1
+                        break
+                elif collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy) and targ[0] in nuts:
+                    while nuts[targ[0]] > 0:
+                        nuts[targ[0]] -= 1
+                        canvas.move(enemy, 20, 0)
+                        time.sleep(0.001)
+                        while not collision_objects(targ[0], enemy):
+                            time.sleep(0.09)
+                            canvas.move(enemy, -1.5, 0)
+                            canvas.update()
+                    canvas.delete(targ[0])
+                    canvas.delete(targ[1])
+                    plants.remove(targ)
+                    del nuts[targ[0]]
+    if canvas.coords(zombie_mob)[0] == 0:
+        loss = True
+
+
+def tutorial(event, used, plant, suns, sunflowers, zombies, plants, r, peashooters, score, potatoes,
+             n, loss, wind_help, button_play, txt_print, click, button_sunflower, button_peashooter,
+             button_potato, button_nut, field, amount, nuts, peas, txt_snf, snf1, snf2, txt_psh, psh1, txt_pt, pt1,
+             txt_nut, nt1):
+    if click:
+        if collision(event, button_play):
+            canvas.delete(button_play)
+            for elem in txt_print:
+                canvas.delete(elem)
+            canvas.delete(wind_help)
+            click = False
+    if collision(event, button_sunflower):
+        plant = "Sunflower"
+    if collision(event, button_peashooter):
+        plant = "Peashooter"
+    if collision(event, button_potato):
+        plant = "Potato"
+    if collision(event, button_nut):
+        plant = "Nut"
+    for pot in field:
+        if collision(event, pot) and plant == "Sunflower" and pot not in used.values() and suns >= 500:
+            a = sunflower_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            sunflowers.append(a)
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 500
+            break
+        if collision(event, pot) and plant == "Peashooter" and pot not in used.values() and suns >= 1000:
+            a = peashooter_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            peashooters.append(a)
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 1000
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+            break
+        if collision(event, pot) and plant == "Potato" and pot not in used.values() and suns >= 5000:
+            a = potato_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            potatoes.append(a)
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 5000
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+            break
+        if collision(event, pot) and plant == "Nut" and pot not in used.values() and suns >= 250:
+            a = nut_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            nuts[a[0]] = 5
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 250
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+            break
+    for s_fl in sunflowers:
+        if collision(event, s_fl[0]):
+            suns += 100 * len(sunflowers)
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+    for p_sh in peashooters:
+        if collision(event, p_sh[0]) and len(peas) < 1:
+            xb = canvas.coords(p_sh[1])[2]
+            yb1 = canvas.coords(p_sh[1])[1]
+            yb2 = canvas.coords(p_sh[1])[3]
+            pea = canvas.create_oval((xb, yb1), (xb + (yb2 - yb1), yb2), fill="#00FF7F", outline="#3CB371")
+            peas.append(pea)
+            got = False
+            while canvas.coords(pea)[2] > 0:
+
+                time.sleep(0.05)
+                canvas.move(pea, 10, 0)
+                canvas.update()
+                for target in zombies:
+                    if collision_objects(pea, target):
+                        zombies[target] -= 1
+                        canvas.delete(pea)
+                        peas.remove(pea)
+                        got = True
+                    if zombies[target] == 0:
+                        canvas.delete(target)
+                        score += 1
+                        amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+                        amount.pack()
+                        del zombies[target]
+                        break
+            if not got:
+                canvas.delete(pea)
+
+    if len(plants) == r:
+        x_z = w - w // 10
+        y_z = (random.randint(1, 4)) * h // 5 + h // 60
+        r += random.randint(1, 3)
+        zombie_spawn(x_z, y_z, zombies, plants, potatoes, score, nuts, loss, used)
+    if loss:
+        for sol in plants:
+            for elem in sol:
+                canvas.delete(elem)
+        for tr in zombies:
+            canvas.delete(tr)
+        canvas.create_text((w // 2, h // 2), font=("Masquerade", w // 10), text="Поражение", fill="red")
+        time.sleep(4)
+        for plc in field:
+            canvas.delete(plc)
+
+        canvas.delete(button_sunflower)
+        canvas.delete(txt_snf)
+        canvas.delete(snf1)
+        canvas.delete(snf2)
+
+        canvas.delete(button_peashooter)
+        canvas.delete(txt_psh)
+        canvas.delete(psh1[0])
+        canvas.delete(psh1[1])
+
+        canvas.delete(button_potato)
+        canvas.delete(txt_pt)
+        canvas.delete(pt1[0])
+        canvas.delete(pt1[1])
+
+        canvas.delete(button_nut)
+        canvas.delete(txt_nut)
+        canvas.delete(nt1[0])
+        canvas.delete(nt1[1])
+        return
+    if score == n:
+        for sol in plants:
+            for elem in sol:
+                canvas.delete(elem)
+        for tr in zombies:
+            canvas.delete(tr)
+        canvas.create_text((w // 2, h // 2), font=("Masquerade", w // 10), text="Победа", fill="#FFAB00")
+        time.sleep(4)
+        for plc in field:
+            canvas.delete(plc)
+
+        canvas.delete(button_sunflower)
+        canvas.delete(txt_snf)
+        canvas.delete(snf1)
+        canvas.delete(snf2)
+
+        canvas.delete(button_peashooter)
+        canvas.delete(txt_psh)
+        canvas.delete(psh1[0])
+        canvas.delete(psh1[1])
+
+        canvas.delete(button_potato)
+        canvas.delete(txt_pt)
+        canvas.delete(pt1[0])
+        canvas.delete(pt1[1])
+
+        canvas.delete(button_nut)
+        canvas.delete(txt_nut)
+        canvas.delete(nt1[0])
+        canvas.delete(nt1[1])
+        return
+
+def stage(event, used, plant, suns, sunflowers, zombies, plants, r, peashooters, score, potatoes,
+                 n, loss, button_sunflower, button_peashooter, button_potato, button_nut, field, amount, nuts, peas,
+          txt_snf, snf1, snf2, txt_psh, psh1, txt_pt, pt1,
+          txt_nut, nt1
+          ):
+
+    if collision(event, button_sunflower):
+        plant = "Sunflower"
+    if collision(event, button_peashooter):
+        plant = "Peashooter"
+    if collision(event, button_potato):
+        plant = "Potato"
+    if collision(event, button_nut):
+        plant = "Nut"
+    for pot in field:
+        if collision(event, pot) and plant == "Sunflower" and pot not in used.values() and suns >= 500:
+            a = sunflower_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            sunflowers.append(a)
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 500
+            break
+        if collision(event, pot) and plant == "Peashooter" and pot not in used.values() and suns >= 1000:
+            a = peashooter_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            peashooters.append(a)
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 1000
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+            break
+        if collision(event, pot) and plant == "Potato" and pot not in used.values() and suns >= 5000:
+            a = potato_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            potatoes.append(a)
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 5000
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+            break
+        if collision(event, pot) and plant == "Nut" and pot not in used.values() and suns >= 250:
+            a = nut_draw(canvas.coords(pot)[0], canvas.coords(pot)[1])
+            nuts[a[0]] = 5
+            plants.append(a)
+            used[a[0]] = pot
+            canvas.update()
+            plant = None
+            suns -= 250
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+            break
+    for s_fl in sunflowers:
+        if collision(event, s_fl[0]):
+            suns += 100 * len(sunflowers)
+            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+            amount.pack()
+    for p_sh in peashooters:
+        if collision(event, p_sh[0]) and len(peas) < 1:
+            xb = canvas.coords(p_sh[1])[2]
+            yb1 = canvas.coords(p_sh[1])[1]
+            yb2 = canvas.coords(p_sh[1])[3]
+            pea = canvas.create_oval((xb, yb1), (xb + (yb2 - yb1), yb2), fill="#00FF7F", outline="#3CB371")
+            peas.append(pea)
+            got = False
+            while canvas.coords(pea)[2] > 0:
+
+                time.sleep(0.05)
+                canvas.move(pea, 10, 0)
+                canvas.update()
+                for target in zombies:
+                    if collision_objects(pea, target):
+                        zombies[target] -= 1
+                        canvas.delete(pea)
+                        peas.remove(pea)
+                        got = True
+                    if zombies[target] == 0:
+                        canvas.delete(target)
+                        score += 1
+                        amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+                        amount.pack()
+                        del zombies[target]
+                        break
+            if not got:
+                canvas.delete(pea)
+    if len(plants) == r:
+        x_z = w - w // 10
+        y_z = (random.randint(1, 4)) * h // 5 + h // 60
+        r += random.randint(1, 3)
+        zombie_spawn(x_z, y_z, zombies, plants, potatoes, score, nuts, loss, used)
+    if loss:
+        for sol in plants:
+            for elem in sol:
+                canvas.delete(elem)
+        for tr in zombies:
+            canvas.delete(tr)
+        canvas.create_text((w // 2, h // 2), font=("Masquerade", w // 10), text="Поражение", fill="red")
+        time.sleep(4)
+        for plc in field:
+            canvas.delete(plc)
+
+        canvas.delete(button_sunflower)
+        canvas.delete(txt_snf)
+        canvas.delete(snf1)
+        canvas.delete(snf2)
+
+        canvas.delete(button_peashooter)
+        canvas.delete(txt_psh)
+        canvas.delete(psh1[0])
+        canvas.delete(psh1[1])
+
+        canvas.delete(button_potato)
+        canvas.delete(txt_pt)
+        canvas.delete(pt1[0])
+        canvas.delete(pt1[1])
+
+        canvas.delete(button_nut)
+        canvas.delete(txt_nut)
+        canvas.delete(nt1[0])
+        canvas.delete(nt1[1])
+        return
+    if score == n:
+        for sol in plants:
+            for elem in sol:
+                canvas.delete(elem)
+        for tr in zombies:
+            canvas.delete(tr)
+        canvas.create_text((w // 2, h // 2), font=("Masquerade", w // 10), text="Победа", fill="#FFAB00")
+        time.sleep(4)
+        for plc in field:
+            canvas.delete(plc)
+
+        canvas.delete(button_sunflower)
+        canvas.delete(txt_snf)
+        canvas.delete(snf1)
+        canvas.delete(snf2)
+
+        canvas.delete(button_peashooter)
+        canvas.delete(txt_psh)
+        canvas.delete(psh1[0])
+        canvas.delete(psh1[1])
+
+        canvas.delete(button_potato)
+        canvas.delete(txt_pt)
+        canvas.delete(pt1[0])
+        canvas.delete(pt1[1])
+
+        canvas.delete(button_nut)
+        canvas.delete(txt_nut)
+        canvas.delete(nt1[0])
+        canvas.delete(nt1[1])
+        return
+
+
+def menu(event):
+    global button_tutorial
+    global button_boss
+    global button_stage
+    if collision(event, button_tutorial):
+        shift_x1 = w // 10
+        suns = 500
+        score = 0
+        sunflowers = list()
+        peashooters = list()
+        potatoes = list()
+        used = dict()
+        zombies = dict()
+        plants = list()
+        nuts = dict()
+        peas = list()
+        plant = ""
+        r = 3
+        n = 5
+        loss = False
+        amount = tkinter.Label(text=f"Солнца: {suns}, убийства: {score} из {n}")
+        amount.pack()
+        field = list()
+        colour = "green"
+
+        button_sunflower = canvas.create_rectangle((0, shift_y), (shift_x, (shift_y * 2)), fill="#D2B48C",
+                                                   outline="#8B4513")
+        xsa = canvas.coords(button_sunflower)[0]
+        ysa = canvas.coords(button_sunflower)[1]
+        txt_snf = canvas.create_text(xsa + w // 7, ysa * 1.5, font=("Masquerade", w // 83), text="500")
+        snf1 = canvas.create_oval((xsa, ysa), (xsa + w // 10, ysa + h // 5), outline="orange", fill="yellow")
+        snf2 = canvas.create_oval((xsa + w // 50, ysa + 20), (xsa + w // 10 - w // 50, ysa + h // 5 - h // 30),
+                                  outline="#542626", fill="#6E3131")
+
+        button_peashooter = canvas.create_rectangle((0, shift_y * 2), (shift_x, (shift_y * 3)), fill="#D2B48C",
+                                                    outline="#8B4513")
+        txt_psh = canvas.create_text(xsa + w // 7, ysa * 2.5, font=("Masquerade", w // 83), text="1000")
+        psh1 = peashooter_draw(canvas.coords(button_peashooter)[0], canvas.coords(button_peashooter)[1])
+
+        button_potato = canvas.create_rectangle((0, shift_y * 3), (shift_x, shift_y * 4), fill="#D2B48C",
+                                                outline="#8B4513")
+        txt_pt = canvas.create_text(xsa + w // 7, ysa * 3.5, font=("Masquerade", w // 83), text="5000")
+        pt1 = potato_draw(canvas.coords(button_potato)[0], canvas.coords(button_potato)[1])
+
+        button_nut = canvas.create_rectangle((0, shift_y * 4), (shift_x, shift_y * 5), fill="#D2B48C",
+                                             outline="#8B4513")
+        txt_nut = canvas.create_text(xsa + w // 7, ysa * 4.5, font=("Masquerade", 12), text="250")
+        nt1 = nut_draw(canvas.coords(button_nut)[0], canvas.coords(button_nut)[1])
+
+        for y in range(0, h, h // 5):
+            if colour == "green":
+                colour = "dark green"
+            elif colour == "dark green":
+                colour = "green"
+            for x in range(shift_x, w, (w - shift_x) // 8):
+                if colour == "green":
+                    square = canvas.create_rectangle((x, y), (x + w // 10, y + h // 5), fill=colour)
+                    colour = "dark green"
+                else:
+                    square = canvas.create_rectangle((x, y), (x + w // 10, y + h // 5), fill=colour)
+                    colour = "green"
+                field.append(square)
+
+        click = True
+        wind_help = canvas.create_rectangle((shift_x1 + w // 100, shift_y - h // 100),
+                                            (w - shift_x1 - w // 100, h - shift_y + h // 100), fill="#D2B48C",
+                                            outline="#8B4513")
+        button_play = canvas.create_rectangle((2 * w // 5, 9 * h // 12), (3 * w // 5, 8.5 * h // 12), fill="white")
+        txt_play = canvas.create_text((2.5 * w // 5, 8.75 * h // 12), font=("Masquerade", w // 105), text="Играть")
+        txt = ["Как играть", "1. Справа на лево идут зомби. Если они дойдут до конца экрана - ты проиграл!",
+               "2. Ты можешь обороняться. Для этого нажми по кнопке с растением слева и после нажми по клетке на поле,",
+               "на которую хочешь поставить растение.",
+               "2.1 Растения не бесплатные. Чтобы купить растение, необходимо чтобы тебе хватало солнц.",
+               "Кол-во твоих солнц показано сверху экрана, цена растения - на кнопке с ним.",
+               "3. Принципы работы растений (сверху вниз):",
+               "Подсолнух - даёт солнца по клику по нему. Чем больше подсолнухов, тем больше солнц за клик.",
+               "Горохострел - по нажатию выпускает горошину, наносящую урон зомби.",
+               'Картофельная мина - при касании с зомби наносит ему огромный урон, но жертвует собой.',
+               "Стена-орех - пушечное мясо.",
+               "4. Для победы необходимо убить определённое количество (см сверху) зомби, "
+               "они появляются через каждые несколько растений.",
+               "Удачи!"]
+        txt_print = list()
+        txt_print.append(txt_play)
+        y_txt = shift_y - 0.005 * h // 100
+        for phrase in txt:
+            ph = canvas.create_text(shift_x1 + w / 2.5, y_txt, font=("Masquerade", w // 105), text=phrase)
+            y_txt += 2 * h // 50
+            txt_print.append(ph)
+        tutorial(event, used, plant, suns, sunflowers, zombies, plants, r, peashooters, score, potatoes,
+                 n, loss, wind_help, button_play, txt_print, click, button_sunflower, button_peashooter,
+                 button_potato, button_nut, field, amount, nuts, peas, txt_snf, snf1, snf2, txt_psh, psh1, txt_pt, pt1,
+             txt_nut, nt1)
+
+
+    if collision(event, button_stage):
+        suns = 500
+        score = 0
+        sunflowers = list()
+        peashooters = list()
+        potatoes = list()
+        used = dict()
+        zombies = dict()
+        plants = list()
+        peas = list()
+        nuts = dict()
+        plant = ""
+        r = 3
+        n = 10
+        loss = False
+        amount = tkinter.Label(text=f"Солнца: {suns}, убийства: {score} из {n}")
+        amount.pack()
+        field = list()
+        colour = "green"
+
+        button_sunflower = canvas.create_rectangle((0, shift_y), (shift_x, (shift_y * 2)), fill="#D2B48C",
+                                                   outline="#8B4513")
+        xsa = canvas.coords(button_sunflower)[0]
+        ysa = canvas.coords(button_sunflower)[1]
+        txt_snf = canvas.create_text(xsa + w // 7, ysa * 1.5, font=("Masquerade", w // 83), text="500")
+        snf1 = canvas.create_oval((xsa, ysa), (xsa + w // 10, ysa + h // 5), outline="orange", fill="yellow")
+        snf2 = canvas.create_oval((xsa + w // 50, ysa + 20), (xsa + w // 10 - w // 50, ysa + h // 5 - h // 30),
+                                  outline="#542626", fill="#6E3131")
+
+        button_peashooter = canvas.create_rectangle((0, shift_y * 2), (shift_x, (shift_y * 3)), fill="#D2B48C",
+                                                    outline="#8B4513")
+        txt_psh = canvas.create_text(xsa + w // 7, ysa * 2.5, font=("Masquerade", w // 83), text="1000")
+        psh1 = peashooter_draw(canvas.coords(button_peashooter)[0], canvas.coords(button_peashooter)[1])
+
+        button_potato = canvas.create_rectangle((0, shift_y * 3), (shift_x, shift_y * 4), fill="#D2B48C",
+                                                outline="#8B4513")
+        txt_pt = canvas.create_text(xsa + w // 7, ysa * 3.5, font=("Masquerade", w // 83), text="5000")
+        pt1 = potato_draw(canvas.coords(button_potato)[0], canvas.coords(button_potato)[1])
+
+        button_nut = canvas.create_rectangle((0, shift_y * 4), (shift_x, shift_y * 5), fill="#D2B48C",
+                                             outline="#8B4513")
+        txt_nut = canvas.create_text(xsa + w // 7, ysa * 4.5, font=("Masquerade", 12), text="250")
+        nt1 = nut_draw(canvas.coords(button_nut)[0], canvas.coords(button_nut)[1])
+
+        for y in range(0, h, h // 5):
+            if colour == "green":
+                colour = "dark green"
+            elif colour == "dark green":
+                colour = "green"
+            for x in range(shift_x, w, (w - shift_x) // 8):
+                if colour == "green":
+                    square = canvas.create_rectangle((x, y), (x + w // 10, y + h // 5), fill=colour)
+                    colour = "dark green"
+                else:
+                    square = canvas.create_rectangle((x, y), (x + w // 10, y + h // 5), fill=colour)
+                    colour = "green"
+                field.append(square)
+        stage(event, used, plant, suns, sunflowers, zombies, plants, r, peashooters, score, potatoes,
+              n, loss, button_sunflower, button_peashooter, button_potato, button_nut, field, amount, nuts, peas,
+              txt_snf, snf1, snf2, txt_psh, psh1, txt_pt, pt1,txt_nut, nt1)
+
+        for plc in field:
+            canvas.delete(plc)
+
+        canvas.delete(button_sunflower)
+        canvas.delete(txt_snf)
+        canvas.delete(snf1)
+        canvas.delete(snf2)
+
+        canvas.delete(button_peashooter)
+        canvas.delete(txt_psh)
+        canvas.delete(psh1[0])
+        canvas.delete(psh1[1])
+
+        canvas.delete(button_potato)
+        canvas.delete(txt_pt)
+        canvas.delete(pt1[0])
+        canvas.delete(pt1[1])
+
+        canvas.delete(button_nut)
+        canvas.delete(txt_nut)
+        canvas.delete(nt1[0])
+        canvas.delete(nt1[1])
+
+
+master.bind("<ButtonPress>", menu)
+canvas.pack()
+master.mainloop()
