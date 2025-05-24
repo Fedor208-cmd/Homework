@@ -191,14 +191,14 @@ def stage(event):
             amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
             amount.pack()
     for p_sh in peashooters:
-        if collision(event, p_sh[0]) and len(peas) < 1:
+        if collision(event, p_sh[0]) and len(peas) == 0:
             xb = canvas.coords(p_sh[1])[2]
             yb1 = canvas.coords(p_sh[1])[1]
             yb2 = canvas.coords(p_sh[1])[3]
             pea = canvas.create_oval((xb, yb1), (xb + (yb2 - yb1), yb2), fill="#00FF7F", outline="#3CB371")
             peas.append(pea)
             got = False
-            while canvas.coords(pea)[2] > 0:
+            while canvas.coords(pea)[2] < w:
 
                 time.sleep(0.05)
                 canvas.move(pea, 10, 0)
@@ -209,6 +209,7 @@ def stage(event):
                         canvas.delete(pea)
                         peas.remove(pea)
                         got = True
+                        break
                     if zombies[target] == 0:
                         canvas.delete(target)
                         score += 1
@@ -217,7 +218,9 @@ def stage(event):
                         del zombies[target]
                         break
             if not got:
+                print("sdgsdf")
                 canvas.delete(pea)
+                peas.clear()
 
     if len(plants) == r and not fight:
         x_z = 900
