@@ -118,7 +118,7 @@ def zombie_spawn(x_l, y_l):
                     canvas.delete(targ[1])
                     plants.remove(targ)
                     del nuts[targ[0]]
-    if canvas.coords(zombie_mob)[0] == 0:
+    if canvas.coords(zombie_mob)[0] <= 0:
         loss = True
 
 
