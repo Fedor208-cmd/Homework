@@ -119,7 +119,7 @@ def zombie_spawn(x_l, y_l):
                     canvas.delete(targ[1])
                     plants.remove(targ)
                     del nuts[targ[0]]
-    if canvas.coords(zombie_mob)[0] == 0:
+    if canvas.coords(zombie_mob)[0] <= 0:
         loss = True
 
 
@@ -233,7 +233,7 @@ def stage(event):
         x_z = w - w // 10
         y_z = (random.randint(1, 4)) * h // 5 + h // 60
         killed = False
-        spd += 0.5
+        spd += 0.25
         zombie_spawn(x_z, y_z)
     if loss:
         for sol in plants:
