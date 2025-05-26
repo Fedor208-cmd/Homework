@@ -82,7 +82,7 @@ def zombie_spawn(x_l, y_l):
     global score
     global nuts
     global loss
-
+    global killed
     zombie_mob = canvas.create_oval((x_l, y_l), (x_l + w // 10, y_l + w // 10), fill="#808000", outline="#556B2F")
     health = 5
     zombies[zombie_mob] = health
@@ -103,6 +103,7 @@ def zombie_spawn(x_l, y_l):
                         if zombies[enemy] <= 0:
                             canvas.delete(enemy)
                             del zombies[enemy]
+                            killed = True
                             score += 1
                         break
                 elif collision_objects(targ[0], enemy) or collision_objects(targ[1], enemy) and targ[0] in nuts:
@@ -201,37 +202,37 @@ def tutorial(event):
             suns += 100 * len(sunflowers)
             amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
             amount.pack()
-        for p_sh in peashooters:
-            if collision(event, p_sh[0]) and len(peas) < 1:
-                xb = canvas.coords(p_sh[1])[2]
-                yb1 = canvas.coords(p_sh[1])[1]
-                yb2 = canvas.coords(p_sh[1])[3]
-                pea = canvas.create_oval((xb, yb1), (xb + (yb2 - yb1), yb2), fill="#00FF7F", outline="#3CB371")
-                peas.append(pea)
-                got = False
-                while canvas.coords(pea)[2] < w:
-
-                    time.sleep(0.05)
-                    canvas.move(pea, 10, 0)
-                    canvas.update()
-                    for target in zombies:
-                        if collision_objects(pea, target):
-                            zombies[target] -= 1
-                            y_zm = (random.randint(1, 4)) * h // 5 + h // 60
-                            canvas.moveto(target, canvas.coords(target)[0], y_zm)
-                            canvas.delete(pea)
-                            peas.remove(pea)
-                            got = True
-                        if zombies[target] == 0:
-                            canvas.delete(target)
-                            score += 1
-                            amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
-                            amount.pack()
-                            del zombies[target]
-                            break
-                if not got:
-                    canvas.delete(pea)
-                    peas.remove(pea)
+    for p_sh in peashooters:
+        if collision(event, p_sh[0]) and len(peas) < 1:
+            xb = canvas.coords(p_sh[1])[2]
+            yb1 = canvas.coords(p_sh[1])[1]
+            yb2 = canvas.coords(p_sh[1])[3]
+            pea = canvas.create_oval((xb, yb1), (xb + (yb2 - yb1), yb2), fill="#00FF7F", outline="#3CB371")
+            peas.append(pea)
+            got = False
+            while canvas.coords(pea)[2] < w:
+                time.sleep(0.05)
+                canvas.move(pea, 10, 0)
+                canvas.update()
+                for target in zombies:
+                    if collision_objects(pea, target):
+                        zombies[target] -= 1
+                        y_zm = (random.randint(1, 4)) * h // 5 + h // 60
+                        canvas.moveto(target, canvas.coords(target)[0], y_zm)
+                        canvas.delete(pea)
+                        peas.remove(pea)
+                        got = True
+                    if zombies[target] == 0:
+                        canvas.delete(target)
+                        score += 1
+                        amount.config(text=f"Солнца: {suns}, убийства: {score} из {n}")
+                        amount.pack()
+                        killed = True
+                        del zombies[target]
+                        break
+            if not got:
+                canvas.delete(pea)
+                peas.remove(pea)
 
     if len(plants) >= r and killed:
         x_z = w - w // 10
